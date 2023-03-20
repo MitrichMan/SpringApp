@@ -9,74 +9,41 @@ import UIKit
 import SpringAnimation
 
 final class ViewController: UIViewController {
-    
+   
+//MARK: - IB outlets
     @IBOutlet var animatedView: SpringView!
-    
-    @IBOutlet var presetLabel: UILabel!
-    @IBOutlet var forceLabel: UILabel!
-    @IBOutlet var durationLabel: UILabel!
-    @IBOutlet var delayLabel: UILabel!
-    @IBOutlet var curveLabel: UILabel!
-    
-    @IBOutlet var runButton: SpringButton!
-    
-    private var nextAnimation = ""
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        nextAnimation = getRandomAnimation()
+    @IBOutlet var animationParametersLabel: SpringLabel! {
+        didSet {
+            animationParametersLabel.text = animation.description
+        }
     }
     
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        runButton.setTitle("Run \(nextAnimation)", for: .normal)
-    }
-    
-    @IBAction func runButtonTapped(_ sender: SpringButton) {
-        animatedView.animation = nextAnimation
-        animatedView.curve = getRandomCurve()
+//MARK: - Private properties
+    private var animation = Animation.getRandomAnimation()
+
+//MARK: - IB actions
+    @IBAction func runButtonTapped(_ sender: UIButton) {
+        setAnimationToLabel()
         
-        animatedView.force = getRandomValue()
-        animatedView.duration = getRandomValue()
-        animatedView.delay = getRandomValue()
-        
-        setupLabels()
-        
+        animatedView.animation = animation.name
+        animatedView.curve = animation.curve
+        animatedView.force = animation.force
+        animatedView.duration = animation.duration
+        animatedView.delay = animation.delay
         animatedView.animate()
         
-        nextAnimation = getRandomAnimation()
+        animation = Animation.getRandomAnimation()
+        sender.setTitle("Run \(animation.name)", for: .normal)
+    }
+    
+    private func setAnimationToLabel() {
+        animationParametersLabel.animation = "fall"
+        animationParametersLabel.animate()
+        animationParametersLabel.text = animation.description
+        animationParametersLabel.animateNext { [unowned self] in
+            animationParametersLabel.animation = "slideDown"
+            animationParametersLabel.animate()
+        }
     }
 }
 
-private extension ViewController {
-    func getRandomAnimation() -> String {
-        let animations = AnimationPreset.allCases.shuffled()
-        let randomIndex = Int.random(in: 0...animations.count - 1)
-        let animation = animations[randomIndex].rawValue
-        return animation
-    }
-    
-    func getRandomCurve() -> String {
-        let curves = AnimationCurve.allCases.shuffled()
-        let randomIndex = Int.random(in: 0...curves.count - 1)
-        let curve = curves[randomIndex].rawValue
-        return curve
-    }
-    
-    func getRandomValue() -> Double {
-        let randomValue = Double.random(in: 0.1...2)
-        return randomValue
-    }
-    
-    func string(from value: Double) -> String {
-        return String(format: "%.2f", value)
-    }
-    
-    func setupLabels() {
-        presetLabel.text = "Preset: \(animatedView.animation)"
-        forceLabel.text = "Force: \(string(from: animatedView.force))"
-        durationLabel.text = "Duration: \(string(from: animatedView.duration))"
-        delayLabel.text = "Delay: \(string(from: animatedView.delay))"
-        curveLabel.text = "Curve: \(animatedView.curve)"
-    }
-}
